@@ -89,6 +89,7 @@ async function removerEmprestimo(emprestimo) {
 
 
 module.exports = {
+
     adicionarEmprestimo,
     buscarEmprestimoPorIdLivroECliente,
     buscarEmprestimoPorIdLivro,

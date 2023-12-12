@@ -39,34 +39,37 @@ async function registrarRetirada(idLivro, idCliente) {
 
 
 async function registrarDevolucao(idLivro, idCliente) {
-    const livro = await livroRepository.buscarLivroPorId(idLivro);
-    const cliente = await clienteRepository.buscarClientePorId(idCliente);
+  const livro = await livroRepository.buscarLivroPorId(idLivro);
+  const cliente = await clienteRepository.buscarClientePorId(idCliente);
 
-    if (!livro || !cliente) {
-      throw new Error("Livro ou cliente não encontrado.");
-    }
-
-    const emprestimo = await emprestimosRepository.buscarEmprestimoPorIdLivroECliente(idLivro, idCliente);
-    if (!emprestimo) {
-      throw new Error("Nenhum registro de retirada encontrado.");
-    }
-
-    const dataAtual = new Date();
-    const dataPrevistaDevolucao = new Date(emprestimo.data);
-    dataPrevistaDevolucao.setDate(dataPrevistaDevolucao.getDate() + 1); 
-    let diasEmAtraso = 0;
-    if (dataAtual > dataPrevistaDevolucao) {
-      diasEmAtraso = Math.floor((dataAtual - dataPrevistaDevolucao) / (1000 * 60 * 60 * 24));
-    }
-
-    await emprestimosRepository.removerEmprestimo(emprestimo);
-
-    if (cliente.livrosEmprestados) {
-      cliente.livrosEmprestados = await cliente.livrosEmprestados.filter((livroEmprestado) => livroEmprestado.id !== idLivro);
-    }
-
-    return `Devolução registrada com sucesso. Dias em atraso: ${diasEmAtraso}`;
+  if (!livro || !cliente) {
+    throw new Error("Livro ou cliente não encontrado.");
   }
+
+  const emprestimo = await emprestimosRepository.buscarEmprestimoPorIdLivroECliente(idLivro, idCliente);
+  if (!emprestimo) {
+    throw new Error("Nenhum registro de retirada encontrado.");
+  }
+
+  const dataAtual = new Date();
+  const dataPrevistaDevolucao = new Date(emprestimo.data);
+  dataPrevistaDevolucao.setDate(dataPrevistaDevolucao.getDate() + 1); 
+  let diasEmAtraso = 0;
+  if (dataAtual > dataPrevistaDevolucao) {
+    diasEmAtraso = Math.floor((dataAtual - dataPrevistaDevolucao) / (1000 * 60 * 60 * 24));
+  }
+
+  await emprestimosRepository.removerEmprestimo(emprestimo);
+
+  
+  if (cliente.livrosEmprestados) {
+    cliente.livrosEmprestados = cliente.livrosEmprestados.filter((livroEmprestado) => livroEmprestado.id !== idLivro);
+    await clienteRepository.atualizarLivrosEmprestados(idCliente, cliente.livrosEmprestados.length);
+  }
+
+  return `Devolução registrada com sucesso. Dias em atraso: ${diasEmAtraso}`;
+}
+
 
 module.exports = {
   registrarRetirada,

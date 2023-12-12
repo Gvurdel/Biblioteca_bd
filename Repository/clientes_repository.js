@@ -71,12 +71,22 @@ async function atualizarLivrosEmprestados(id, livrosEmprestados) {
     try {
         await client.connect();
 
-        const sql = 'UPDATE clientes SET livros_emprestados = $1 WHERE id = $2 RETURNING *';
-        const values = [livrosEmprestados, id];
+        // Obter o cliente atual do banco de dados
+        const clienteAtual = await client.query('SELECT * FROM clientes WHERE id = $1', [id]);
 
-        const result = await client.query(sql, values);
+        if (clienteAtual.rows.length === 0) {
+            console.error("Cliente não encontrado.");
+            return null;
+        }
+
+        // Adicionar ou subtrair os livros emprestados
+        const livrosAntigos = clienteAtual.rows[0].livros_emprestados || 0;
+        const livrosTotais = livrosAntigos + livrosEmprestados;
+
+        // Atualizar a quantidade de livros emprestados do cliente
+        const result = await client.query('UPDATE clientes SET livros_emprestados = $1 WHERE id = $2 RETURNING *', [livrosTotais, id]);
+
         const clienteAtualizado = result.rows[0];
-
         return clienteAtualizado;
     } catch (error) {
         console.error("Erro ao atualizar livros emprestados:", error);
@@ -85,6 +95,8 @@ async function atualizarLivrosEmprestados(id, livrosEmprestados) {
         await client.end();
     }
 }
+
+
 
 module.exports = {
     adicionarCliente,
