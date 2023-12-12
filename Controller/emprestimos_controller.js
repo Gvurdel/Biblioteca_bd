@@ -1,19 +1,19 @@
 const emprestimosService = require('../Service/emprestimos_service')
 
-function registrarRetirada(req, res) {
+async function registrarRetirada(req, res) {
     try {
         const { idLivro, idCliente } = req.body;
-        const resultado = emprestimosService.registrarRetirada(idLivro, idCliente);
+        const resultado = await emprestimosService.registrarRetirada(idLivro, idCliente);
         res.status(200).json(resultado);
     } catch (erro) {
         res.status(400).json({ mensagem: erro.message });
     }
 }
 
-function registrarDevolucao(req, res) {
+async function registrarDevolucao(req, res) {
     try {
         const { idLivro, idCliente } = req.body;
-        const resultado = emprestimosService.registrarDevolucao(idLivro, idCliente);
+        const resultado = await emprestimosService.registrarDevolucao(idLivro, idCliente);
         res.status(200).json(resultado);
     } catch (erro) {
         res.status(400).json({ mensagem: erro.message });

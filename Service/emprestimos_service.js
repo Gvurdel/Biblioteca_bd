@@ -2,51 +2,50 @@ const livroRepository = require('../Repository/livros_repository');
 const clienteRepository = require('../Repository/clientes_repository');
 const emprestimosRepository = require('../Repository/emprestimos_repository');
 
-function registrarRetirada(idLivro, idCliente) {
-    const livro = livroRepository.buscarLivroPorId(idLivro);
-    const cliente = clienteRepository.buscarClientePorId(idCliente);
+async function registrarRetirada(idLivro, idCliente) {
+  const livro = await livroRepository.buscarLivroPorId(idLivro);
+  const cliente = await clienteRepository.buscarClientePorId(idCliente);
 
-    if (!livro || !cliente) {
-      throw new Error("Livro ou cliente não encontrado.");
+  if (!livro || !cliente) {
+    throw new Error("Livro ou cliente não encontrado.");
+  }
+
+  const emprestimoExistente = await emprestimosRepository.buscarEmprestimoPorIdLivroECliente(idLivro, idCliente);
+  if (emprestimoExistente) {
+    throw new Error("Este livro já está emprestado a este cliente.");
+  }
+
+  const emprestimosDoLivro = await emprestimosRepository.buscarEmprestimoPorIdLivro(idLivro);
+
+  if (emprestimosDoLivro) {
+    if (emprestimosDoLivro.idCliente !== idCliente) {
+      throw new Error("Este livro já está emprestado a outro cliente.");
     }
+  }
 
-    const emprestimoExistente = emprestimosRepository.buscarEmprestimoPorIdLivroECliente(idLivro, idCliente);
-    if (emprestimoExistente) {
-      throw new Error("Este livro já está emprestado a este cliente.");
-    }
+  cliente.livrosEmprestados = cliente.livrosEmprestados || [];
 
-    const emprestimosDoLivro = emprestimosRepository.buscarEmprestimoPorIdLivro(idLivro);
+  if (cliente.livrosEmprestados.length >= 3) {
+    throw new Error("O cliente já atingiu o limite de 3 livros emprestados.");
+  }
 
-    if (emprestimosDoLivro) {
-      if (emprestimosDoLivro.idCliente !== idCliente) {
-        throw new Error("Este livro já está emprestado a outro cliente.");
-      }
-    }
+  await emprestimosRepository.adicionarEmprestimo({ idLivro, idCliente, data: new Date() });
+  await clienteRepository.atualizarLivrosEmprestados(idCliente, cliente.livrosEmprestados.length + 1);
 
-    if (!cliente.livrosEmprestados) {
-      cliente.livrosEmprestados = [];
-    }
-
-    if (cliente.livrosEmprestados.length >= 3) {
-      throw new Error("O cliente já retirou 3 livros.");
-    }
-
-    emprestimosRepository.adicionarEmprestimo({ idLivro, idCliente, data: new Date() });
-    cliente.livrosEmprestados.push(livro);
-
-    return "Retirada registrada com sucesso.";
+  return "Retirada registrada com sucesso.";
 }
 
 
-function registrarDevolucao(idLivro, idCliente) {
-    const livro = livroRepository.buscarLivroPorId(idLivro);
-    const cliente = clienteRepository.buscarClientePorId(idCliente);
+
+async function registrarDevolucao(idLivro, idCliente) {
+    const livro = await livroRepository.buscarLivroPorId(idLivro);
+    const cliente = await clienteRepository.buscarClientePorId(idCliente);
 
     if (!livro || !cliente) {
       throw new Error("Livro ou cliente não encontrado.");
     }
 
-    const emprestimo = emprestimosRepository.buscarEmprestimoPorIdLivroECliente(idLivro, idCliente);
+    const emprestimo = await emprestimosRepository.buscarEmprestimoPorIdLivroECliente(idLivro, idCliente);
     if (!emprestimo) {
       throw new Error("Nenhum registro de retirada encontrado.");
     }
@@ -59,10 +58,10 @@ function registrarDevolucao(idLivro, idCliente) {
       diasEmAtraso = Math.floor((dataAtual - dataPrevistaDevolucao) / (1000 * 60 * 60 * 24));
     }
 
-    emprestimosRepository.removerEmprestimo(emprestimo);
+    await emprestimosRepository.removerEmprestimo(emprestimo);
 
     if (cliente.livrosEmprestados) {
-      cliente.livrosEmprestados = cliente.livrosEmprestados.filter((livroEmprestado) => livroEmprestado.id !== idLivro);
+      cliente.livrosEmprestados = await cliente.livrosEmprestados.filter((livroEmprestado) => livroEmprestado.id !== idLivro);
     }
 
     return `Devolução registrada com sucesso. Dias em atraso: ${diasEmAtraso}`;

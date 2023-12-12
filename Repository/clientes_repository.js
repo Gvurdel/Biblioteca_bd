@@ -1,70 +1,96 @@
-const clientes = [
-    { 
-        
-        "id": 1,
-        "nome": "Cliente 1",
-        "telefone": "11116666"
-        },
-        
-        {
-            "id": 2 ,
-            "nome": "Cliente 2",
-            "telefone": "888888888"
-        },
-        {
-            "id": 3,
-            "nome": "Cliente 3",
-            "telefone": "777777777"
-        },
-        {
-            "id": 4,
-            "nome": "Cliente 4",
-            "telefone": "111111111"
-        }
-        ];
+const {Client} = require('pg');
 
-let idGerador = 1;
+const conexao = {
+    host: "localhost",
+    port: 5432,
+    database: "Biblioteca",
+    user: "postgres",
+    password: "123456"
 
-    function geraId() {
-        return idGerador++;
-    }
+}
+async function adicionarCliente(cliente) {
+    const client = new Client(conexao);
+    await client.connect();
+    const result = await client.query(
+        "INSERT INTO clientes(nome, telefone) VALUES ($1, $2) RETURNING *",
+        [cliente.nome, cliente.telefone]
+    );
+    const clienteInserido = result.rows[0];
+    await client.end();
+    return clienteInserido;
+}
 
-    function adicionarCliente(cliente) {
-        cliente.id = geraId();
-        clientes.push(cliente);
-    }
+async function listarClientes() {
+    const client = new Client(conexao);
+    await client.connect();
+    const result = await client.query("SELECT * FROM clientes");
+    const listaCli = result.rows;
+    await client.end();
+    return listaCli;
+    
+}
 
-    function listarClientes() {
-    return clientes;
-    }
+async function buscarClientePorId(id) {
+    const client = new Client(conexao);
+    await client.connect();
+    const res = await client.query('SELECT * FROM clientes WHERE id=$1',[id]);
+    const cliente = res.rows[0];
+    await client.end();
+    return cliente;
 
-    function buscarClientePorId(id) {
-    return clientes.find(cliente => cliente.id === id);
-    }
+}
 
-    function atualizarCliente(id, novoCliente) {
-    const index = clientes.findIndex(cliente => cliente.id === id);
-    if (index !== -1) {
-        clientes[index] = { ...novoCliente, id };
-        return clientes[index];
-    }
-    return null;
-    }
+async function atualizarCliente(id, novoCliente) {
+    const sql = 'UPDATE clientes set nome=$1, telefone=$2 WHERE id=$3 RETURNING *'
+    const values = [novoCliente.nome, novoCliente.telefone, id];
+    const client = new Client(conexao);
+    await client.connect();
+    const res = await client.query(sql,values);
+    const clienteAtualizado = res.rows[0];
+    await client.end();
+    return clienteAtualizado;    
 
-    function deletarCliente(id) {
-    const index = clientes.findIndex(cliente => cliente.id === id);
-    if (index !== -1) {
-        const clienteDeletado = clientes.splice(index, 1)[0];
-        return clienteDeletado;
+}
+
+async function deletarCliente(id) {
+    const sql = 'DELETE FROM clientes WHERE id=$1 RETURNING *'
+    const values = [id];
+
+    const client = new Client(conexao);
+    await client.connect();
+    const res = await client.query(sql,values);
+    const clienteDeletado = res.rows[0];
+    await client.end();
+    return clienteDeletado;
+
+}
+
+async function atualizarLivrosEmprestados(id, livrosEmprestados) {
+    const client = new Client(conexao);
+
+    try {
+        await client.connect();
+
+        const sql = 'UPDATE clientes SET livros_emprestados = $1 WHERE id = $2 RETURNING *';
+        const values = [livrosEmprestados, id];
+
+        const result = await client.query(sql, values);
+        const clienteAtualizado = result.rows[0];
+
+        return clienteAtualizado;
+    } catch (error) {
+        console.error("Erro ao atualizar livros emprestados:", error);
+        return null;
+    } finally {
+        await client.end();
     }
-    return null;
-    }
+}
 
 module.exports = {
-    geraId,
     adicionarCliente,
     listarClientes,
     buscarClientePorId,
     atualizarCliente,
     deletarCliente,
+    atualizarLivrosEmprestados
 };

@@ -1,20 +1,20 @@
 const clienteRepository = require('../Repository/clientes_repository')
 
-function listarClientes() {
-    return clienteRepository.listarClientes();
+async function listarClientes() {
+    return await clienteRepository.listarClientes();
 }
 
-function adicionarCliente(cliente) {
+async function adicionarCliente(cliente) {
     if(cliente && cliente.nome && cliente.telefone) {
-        clienteRepository.adicionarCliente(cliente);
+        return await clienteRepository.adicionarCliente(cliente);
     }
     else {
         throw {id:400, message:"Cliente não possui nome ou telefone"};
     }
 }
 
-function buscarClientePorId(id) {
-    const cliente = clienteRepository.buscarClientePorId(id);
+async function buscarClientePorId(id) {
+    const cliente = await clienteRepository.buscarClientePorId(id);
     if(cliente) {
         return cliente;
     }
@@ -23,22 +23,21 @@ function buscarClientePorId(id) {
     }
 }
 
-function atualizarCliente(id, clienteAtualizado) {
-    const cliente = clienteRepository.atualizarCliente(id);
-    if(!cliente) {
-        throw {id: 404, message: "Cliente não encontrado"};
-    }
-    
-    if(clienteAtualizado && clienteAtualizado.nome && clienteAtualizado.telefone){
-        clienteRepository.atualizarCliente(id, clienteAtualizado);
-    }
-    else {
-        throw {id: 400, message: "Cliente não possui um dos campos obrigatórios"};
+async function atualizarCliente(id, clienteAtualizado) {
+    if (clienteAtualizado && clienteAtualizado.nome && clienteAtualizado.telefone) {
+        const cliente = await clienteRepository.atualizarCliente(id, clienteAtualizado);
+        if (!cliente) {
+            throw { id: 404, message: "Cliente não encontrado" };
+        }
+        return cliente;
+    } else {
+        throw { id: 400, message: "Cliente não possui um dos campos obrigatórios" };
     }
 }
 
-function deletarCliente(id) {
-    const clienteDeletado = clienteRepository.deletarCliente(id);
+
+async function deletarCliente(id) {
+    const clienteDeletado = await clienteRepository.deletarCliente(id);
     if(clienteDeletado){
         return clienteDeletado;
     }

@@ -1,72 +1,70 @@
-const livros = [
-{ 
-    "id": 1,
-    "nome": "livro 1",
-    "autor": "autor 1"
+const {Client} = require('pg');
 
-},
-{ 
-    "id": 2,
-    "nome": "livro 2",
-    "autor": "autor 2"
-
-},
-{
-    "id": 3,
-    "nome": "livro 3",
-    "autor": "autor 3"
-
-},
-
-{ 
-    "id": 4,
-    "nome": "livro 4",
-    "autor": "autor 4"
+const conexao = {
+    host: "localhost",
+    port: 5432,
+    database: "Biblioteca",
+    user: "postgres",
+    password: "123456"
 
 }
 
-];
+async function adicionarLivro(livro) {
+    const client = new Client(conexao);
+    await client.connect();
+    const result = await client.query(
+        "INSERT INTO livros(nome, autor) VALUES ($1, $2) RETURNING *",
+        [livro.nome, livro.autor]
+    );
+    const livroInserido = result.rows[0];
+    await client.end();
+    return livroInserido;
+}
 
-let idGerador = 1;
 
-    function geraId() {
-        return idGerador++;
+async function listarLivros() {
+    const client = new Client(conexao);
+    await client.connect();
+    const result = await client.query("SELECT * FROM livros");
+    const listalivros = result.rows;
+    await client.end();
+    return listalivros;
     }
 
-    function adicionarLivro(livro) {
-        livro.id = geraId();
-        livros.push(livro);
+async function buscarLivroPorId(id) {
+    const client = new Client(conexao);
+    await client.connect();
+    const res = await client.query('SELECT * FROM livros WHERE id=$1',[id]);
+    const livro = res.rows[0];
+    await client.end();
+    return livro;
     }
 
-    function listarLivros() {
-    return livros;
-    }
+async function atualizarLivro(id, novoLivro) {
+    const sql = 'UPDATE livros set nome=$1, autor=$2 WHERE id=$3 RETURNING *'
+    const values = [novoLivro.nome, novoLivro.autor, id];
+    const client = new Client(conexao);
+    await client.connect();
+    const res = await client.query(sql,values);
+    const livroAtualizado = res.rows[0];
+    await client.end();
+    return livroAtualizado;
+}
 
-    function buscarLivroPorId(id) {
-    return livros.find(livro => livro.id === id);
-    }
+async function deletarLivro(id) {
+    const sql = 'DELETE FROM livros WHERE id=$1 RETURNING *'
+    const values = [id];
 
-    function atualizarLivro(id, livro) {
-        for(let ind in livros) {
-            if(livros[ind].id === id) {
-                livros[ind] = livro;
-                livros[ind].id = id;
-                return;
-            }
-        }
-    }
+    const client = new Client(conexao);
+    await client.connect();
+    const res = await client.query(sql,values);
+    const livroDeletado = res.rows[0];
+    await client.end();
+    return livroDeletado;
 
-    function deletarLivro(id) {
-    const index = livros.findIndex(livro => livro.id === id);
-    if (index !== -1) {
-        const livroDeletado = livros.splice(index, 1)[0];
-        return livroDeletado;
-    }
-    return null;
     }
 
 module.exports = {
-    geraId,
     adicionarLivro,
     listarLivros,
     buscarLivroPorId,

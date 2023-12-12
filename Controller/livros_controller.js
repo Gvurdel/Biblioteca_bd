@@ -1,15 +1,15 @@
 const livroService = require('../Service/livros_service')
 
 
-function listarLivros(req, res) {
-    const listaLivros = livroService.listarLivros();
+async function listarLivros(req, res) {
+    const listaLivros = await livroService.listarLivros();
     res.json(listaLivros);
 }
 
-function adicionarLivro(req, res) {
+async function adicionarLivro(req, res) {
     let livro = req.body;
     try {
-        livroService.adicionarLivro(livro);
+        await livroService.adicionarLivro(livro);
         res.status(201).json({msg:'Cadastro realizado com sucesso!'})
     }
     catch(err) {
@@ -18,10 +18,10 @@ function adicionarLivro(req, res) {
     }
 }
 
-function buscarLivroPorId(req, res) {
+async function buscarLivroPorId(req, res) {
     const id = +req.params.id;
     try {
-        const liv = livroService.buscarLivroPorId(id);
+        const liv = await livroService.buscarLivroPorId(id);
         res.json(liv);
     }
     catch(err) {
@@ -30,12 +30,12 @@ function buscarLivroPorId(req, res) {
     }
 }
 
-function atualizarLivro(req, res) {
+async function atualizarLivro(req, res) {
     const id = +req.params.id;
     let livro = req.body;
 
     try{ 
-        livroService.atualizarLivro(id, livro);
+        await livroService.atualizarLivro(id, livro);
         res.status(200).json({msg:'Cadastro atualizado com sucesso!'});
     }
     catch(err) {
@@ -43,10 +43,10 @@ function atualizarLivro(req, res) {
     }
 }
 
-function deletarLivro(req, res) {
+async function deletarLivro(req, res) {
     const id = +req.params.id;
     try{ 
-        const livroDeletado = livroService.deletarLivro(id);
+        const livroDeletado = await livroService.deletarLivro(id);
         res.json(livroDeletado);
     }
     catch(err) {

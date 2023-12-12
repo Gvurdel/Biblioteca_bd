@@ -1,15 +1,15 @@
 const clienteService = require('../Service/clientes_service')
 
 
-function listarClientes(req, res) {
-    const listaClientes = clienteService.listarClientes();
+async function listarClientes(req, res) {
+    const listaClientes = await clienteService.listarClientes();
     res.json(listaClientes);
 }
 
-function adicionarCliente(req, res) {
+async function adicionarCliente(req, res) {
     let cliente = req.body;
     try {
-        clienteService.adicionarCliente(cliente);
+        await clienteService.adicionarCliente(cliente);
         res.status(201).json({msg:'Cadastro realizado com sucesso!'})
     }
     catch(err) {
@@ -18,10 +18,10 @@ function adicionarCliente(req, res) {
     }
 }
 
-function buscarClientePorId(req, res) {
+async function buscarClientePorId(req, res) {
     const id = +req.params.id;
     try {
-        const cli = clienteService.buscarClientePorId(id);
+        const cli = await clienteService.buscarClientePorId(id);
         res.json(cli);
     }
     catch(err) {
@@ -30,23 +30,23 @@ function buscarClientePorId(req, res) {
     }
 }
 
-function atualizarCliente (req, res) {
+async function atualizarCliente (req, res) {
     const id = +req.params.id;
     let cliente = req.body;
 
     try{ 
-        clienteService.atualizarCliente(id, cliente);
-        res.json({msg:'Cadastro atualizado com sucesso!'});
+        await clienteService.atualizarCliente(id, cliente);
+        res.status(200).json({msg:'Cadastro atualizado com sucesso!'});
     }
     catch(err) {
         res.status(404).json({msg: err.message});
     }
 }
 
-function deletarCliente(req, res) {
+async function deletarCliente(req, res) {
     const id = +req.params.id;
     try{ 
-        const clienteDeletado = clienteService.deletarCliente(id);
+        await clienteService.deletarCliente(id);
         res.json({msg:'Cadastro deletado com sucesso!'});
     }
     catch(err) {
