@@ -17,8 +17,9 @@ async function registrarRetirada(idLivro, idCliente) {
 
   const emprestimosDoLivro = await emprestimosRepository.buscarEmprestimoPorIdLivro(idLivro);
 
-  if (emprestimosDoLivro) {
-    if (emprestimosDoLivro.idCliente !== idCliente) {
+  if (emprestimosDoLivro && emprestimosDoLivro.length > 0) {
+    const livroJaEmprestado = emprestimosDoLivro.some((emprestimo) => emprestimo.idCliente !== idCliente);
+    if (livroJaEmprestado) {
       throw new Error("Este livro já está emprestado a outro cliente.");
     }
   }
