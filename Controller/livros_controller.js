@@ -13,7 +13,7 @@ function adicionarLivro(req, res) {
         res.status(201).json({msg:'Cadastro realizado com sucesso!'})
     }
     catch(err) {
-      //id-> 400 / msg -> msg de erro
+
         res.status(400).json({msg: err.message});
     }
 }
@@ -25,7 +25,7 @@ function buscarLivroPorId(req, res) {
         res.json(liv);
     }
     catch(err) {
-      //id-> 404 / msg -> msg de erro
+
         res.status(404).json({msg: err.message});
     }
 }
